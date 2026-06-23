@@ -16,17 +16,26 @@ Route::get('/dashboard', function () {
     $totalCasas = Casa::where('user_id', Auth::id())->count();
     $totalReservas = Reserva::where('user_id', Auth::id())->count();
     $reservasPendentes = Reserva::where('user_id', Auth::id())
-        ->where('check_in', '>=', now())->count();
+        ->where('check_in', '>=', today())->count();
 
-    $dados = Reserva::where('user_id', Auth::id())
-        ->where('created_at', '>=', now()->subMonths(6))
-        ->select(DB::raw("DATE_FORMAT(created_at, '%m/%Y') as mes"), DB::raw('COUNT(*) as total'))
-        ->groupBy('mes')
-        ->orderBy('mes')
+    // Agrupa por mês do check_in do ano atual
+    $reservas = Reserva::where('user_id', Auth::id())
+        ->whereYear('check_in', now()->year)
         ->get();
 
-    $meses = $dados->pluck('mes');
-    $quantidades = $dados->pluck('total');
+    $agrupado = [];
+    foreach ($reservas as $reserva) {
+        $mes = date('m/Y', strtotime($reserva->check_in));
+        if (!isset($agrupado[$mes])) {
+            $agrupado[$mes] = 0;
+        }
+        $agrupado[$mes]++;
+    }
+
+    ksort($agrupado);
+
+    $meses = array_keys($agrupado);
+    $quantidades = array_values($agrupado);
 
     return view('dashboard', compact(
         'totalCasas',

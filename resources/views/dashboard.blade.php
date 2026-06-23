@@ -21,18 +21,27 @@
         </div>
 
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="font-semibold text-gray-700 mb-4">Reservas por mês (últimos 6 meses)</h3>
-            <canvas id="grafico" height="100"></canvas>
+            <h3 class="font-semibold text-gray-700 mb-4">
+                Reservas por mês ({{ now()->year }})
+            </h3>
+            <canvas id="grafico" height="100"
+                data-meses="{{ implode(',', $meses) }}"
+                data-quantidades="{{ implode(',', $quantidades) }}">
+            </canvas>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const ctx = document.getElementById('grafico');
-                const meses = JSON.parse('{{ json_encode($meses) }}');
-                const quantidades = JSON.parse('{{ json_encode($quantidades) }}');
+                const canvas = document.getElementById('grafico');
 
-                new Chart(ctx, {
+                const mesesRaw = canvas.getAttribute('data-meses');
+                const quantidadesRaw = canvas.getAttribute('data-quantidades');
+
+                const meses = mesesRaw ? mesesRaw.split(',') : [];
+                const quantidades = quantidadesRaw ? quantidadesRaw.split(',').map(Number) : [];
+
+                new Chart(canvas, {
                     type: 'bar',
                     data: {
                         labels: meses,
